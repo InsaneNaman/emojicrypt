@@ -13,11 +13,5 @@
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "emojicrypt"
 		}
-	],
-	"kv_namespaces": [
-		{
-			"binding": "NEXT_INC_CACHE_KV",
-			"id": "NEXT_INC_CACHE_KV"
-		}
 	]
 }
