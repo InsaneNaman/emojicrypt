@@ -1,7 +1,7 @@
 "use client";
 import { toast } from "sonner";
 import CryptoJS from "crypto-js";
-
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui";
 import { Copy, Key, Lock, Unlock, Sparkles, RefreshCw } from "lucide-react";
 
-export default function EncryptionTool() {
+function EncryptionToolContent() {
 	const [mode, setMode] = useState("encrypt");
 	const [inputText, setInputText] = useState("");
 	const [outputText, setOutputText] = useState("");
@@ -545,5 +545,19 @@ export default function EncryptionTool() {
 				</CardFooter>
 			</Card>
 		</main>
+	);
+}
+
+export default function EncryptionTool() {
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-screen items-center justify-center">
+					<div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+				</div>
+			}
+		>
+			<EncryptionToolContent />
+		</Suspense>
 	);
 }
