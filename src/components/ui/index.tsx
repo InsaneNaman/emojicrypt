@@ -5,3 +5,5 @@ export * from "./label";
 export * from "./textarea";
 export * from "./tabs";
 export * from "./sheet";
+export * from "./hyper-text";
+export * from "./text-animate";
