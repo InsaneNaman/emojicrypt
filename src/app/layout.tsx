@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -33,12 +34,14 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-b from-background to-background/90 dark`}
 			>
-				<div className="flex min-h-screen flex-col">
-					<Header />
-					<div className="flex-1">{children}</div>
-					<Footer />
-				</div>
-				<Toaster />
+				<NuqsAdapter>
+					<div className="flex min-h-screen flex-col">
+						<Header />
+						<div className="flex-1">{children}</div>
+						<Footer />
+					</div>
+				</NuqsAdapter>
+				<Toaster richColors />
 			</body>
 		</html>
 	);
