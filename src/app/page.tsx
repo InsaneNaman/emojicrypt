@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import EncryptionToolContent from "@/app/_components/index";
+import EncryptionToolContent from "@/app/_components/Encryption";
 
 interface Props {
 	searchParams: { [key: string]: string | string[] | undefined };
