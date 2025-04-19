@@ -1,7 +1,11 @@
 import { Suspense } from "react";
 import EncryptionToolContent from "@/app/_components/index";
 
-export default function EncryptionToolPage() {
+interface Props {
+	searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default function EncryptionToolPage({ searchParams }: Props) {
 	return (
 		<Suspense
 			fallback={

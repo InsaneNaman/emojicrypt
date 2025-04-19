@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryState } from "@/lib/nuqs";
 import CryptoJS from "crypto-js";
 import { toast } from "sonner";
 
@@ -14,19 +14,18 @@ import {
 } from "./index.utils";
 
 export default function EncryptionToolContent() {
-	const [mode, setMode] = useState("encrypt");
+	const [mode, setMode] = useQueryState("mode", {
+		defaultValue: "encrypt",
+		clearOnDefault: true,
+	});
+	const [encryptedText, setEncryptedText] = useQueryState("text");
+	const [urlKey, setUrlKey] = useQueryState("key");
 	const [inputText, setInputText] = useState("");
 	const [outputText, setOutputText] = useState("");
 	const [key, setKey] = useState("");
 	const [keyLocked, setKeyLocked] = useState(false);
 
-	const router = useRouter();
-	const searchParams = useSearchParams();
-
 	useEffect(() => {
-		const encryptedText = searchParams.get("text");
-		const urlKey = searchParams.get("key");
-
 		if (encryptedText && urlKey) {
 			setMode("decrypt");
 			setInputText(encryptedText);
@@ -37,14 +36,12 @@ export default function EncryptionToolContent() {
 				);
 				setOutputText(decrypted);
 			} catch {
-				toast({
-					title: "Decryption Error 😕",
+				toast.error("Decryption Error", {
 					description: "Could not decrypt the text with the provided key.",
-					variant: "destructive",
 				});
 			}
 		}
-	}, [searchParams]);
+	}, [encryptedText, urlKey, setMode]);
 
 	useEffect(() => {
 		if (!inputText || !key) {
@@ -71,32 +68,27 @@ export default function EncryptionToolContent() {
 
 	const generateShareableUrl = () => {
 		if (!inputText || !key) {
-			toast({
-				title: "Missing Information 🧩",
+			toast.error("Missing Information", {
 				description: "Please provide both text and key to generate a URL.",
-				variant: "destructive",
 			});
 			return;
 		}
 
 		const encrypted = CryptoJS.AES.encrypt(inputText, key).toString();
-		const url = `${window.location.origin}?text=${encodeURIComponent(encrypted)}&key=${encodeURIComponent(key)}`;
-		navigator.clipboard.writeText(url);
+		setEncryptedText(encrypted);
+		setUrlKey(key);
+		setMode("decrypt");
 
-		toast({
-			title: "URL Copied 🔗",
-			description: "Shareable URL has been copied to clipboard.",
-			icon: "🔗",
+		toast.success("Shareable URL has been created.", {
+			description: "Shareable URL has been created.",
 		});
 	};
 
 	const copyOutputText = () => {
 		if (!outputText) return;
 		navigator.clipboard.writeText(outputText);
-		toast({
-			title: "Copied 📋",
+		toast.success("Copied", {
 			description: "Text copied to clipboard.",
-			icon: "📋",
 		});
 	};
 
@@ -104,10 +96,8 @@ export default function EncryptionToolContent() {
 		if (keyLocked) return;
 		const generated = generateRandomKeyString();
 		setKey(generated);
-		toast({
-			title: "Key Generated 🔑",
-			description: "A random encryption key has been created.",
-			icon: "🔑",
+		toast.success("Key Generated", {
+			description: `A random encryption key "${key}" has been created.`,
 		});
 	};
 
@@ -116,11 +106,12 @@ export default function EncryptionToolContent() {
 			setInputText("");
 			setOutputText("");
 			setKey("");
+			toast.success("All Cleared", {
+				description: "All fields have been cleared.",
+			});
 		} else {
-			toast({
-				title: "Key Locked 🔒",
+			toast.error("Key Locked", {
 				description: "Unlock the key first to clear all fields.",
-				variant: "destructive",
 			});
 		}
 	};
