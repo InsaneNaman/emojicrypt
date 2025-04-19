@@ -11,7 +11,7 @@ import {
 	convertToEmojis,
 	convertFromEmojis,
 	generateRandomKeyString,
-} from "./index.utils";
+} from "./index.helpers";
 
 export default function EncryptionToolContent() {
 	const [mode, setMode] = useQueryState("mode", {
@@ -84,14 +84,6 @@ export default function EncryptionToolContent() {
 		});
 	};
 
-	const copyOutputText = () => {
-		if (!outputText) return;
-		navigator.clipboard.writeText(outputText);
-		toast.success("Copied", {
-			description: "Text copied to clipboard.",
-		});
-	};
-
 	const generateRandomKey = () => {
 		if (keyLocked) return;
 		const generated = generateRandomKeyString();
@@ -128,7 +120,6 @@ export default function EncryptionToolContent() {
 			keyLocked={keyLocked}
 			setKeyLocked={setKeyLocked}
 			onGenerateKey={generateRandomKey}
-			onCopyOutput={copyOutputText}
 			onGenerateURL={generateShareableUrl}
 			onClearAll={clearAll}
 		/>
