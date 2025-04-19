@@ -50,7 +50,7 @@ export default function Header() {
 					))}
 
 					<a
-						href="https://github.com/naman/emojicrypt"
+						href="https://github.com/insanenaman/emojicrypt"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -96,7 +96,7 @@ export default function Header() {
 							))}
 
 							<a
-								href="https://github.com/naman/emojicrypt"
+								href="https://github.com/insanenaman/emojicrypt"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
