@@ -4,6 +4,7 @@ import { Copy, Key, Lock, Unlock, RefreshCw } from "lucide-react";
 import { Button, Input, Label, Textarea } from "@/components/ui";
 import { copyOutputText } from "./index.helpers";
 import { useCopyToClipboard } from "usehooks-ts";
+import { toast } from "sonner";
 
 interface TextAndKeyInputProps {
 	mode: string;
@@ -29,6 +30,19 @@ export const TextAndKeyInput = ({
 	onGenerateKey,
 }: TextAndKeyInputProps) => {
 	const [copiedText, copyToClipboard] = useCopyToClipboard();
+
+	const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+		if (!keyLocked && mode === "decrypt") {
+			e.preventDefault();
+			toast.warning("Key Not Locked", {
+				description: "Lock your key before pasting encrypted text.",
+			});
+			return;
+		}
+		const pasted = e.clipboardData.getData("text");
+		setInputText(pasted);
+	};
+
 	return (
 		<div className="grid gap-6 mb-6">
 			<div className="bg-muted/30 p-4 rounded-lg border">
@@ -50,15 +64,27 @@ export const TextAndKeyInput = ({
 							className="pr-10 text-base"
 						/>
 						<Button
-							variant="ghost"
 							size="icon"
-							className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-							onClick={() => setKeyLocked(!keyLocked)}
+							className="absolute right-1 top-1/2 -translate-y-1/2 w-22 h-8"
+							onClick={() => {
+								if (!keyLocked && keyValue.trim().length < 5) {
+									toast.warning("Key Too Short", {
+										description:
+											"Key must be at least 5 characters long to lock.",
+									});
+									return;
+								}
+								setKeyLocked(!keyLocked);
+							}}
 						>
 							{keyLocked ? (
-								<Lock className="h-4 w-4" />
+								<>
+									<Unlock className="h-4 w-4" /> Unlock
+								</>
 							) : (
-								<Unlock className="h-4 w-4" />
+								<>
+									<Lock className="h-4 w-4" /> Lock
+								</>
 							)}
 						</Button>
 					</div>
@@ -78,6 +104,7 @@ export const TextAndKeyInput = ({
 						: "🔓 Key is unlocked. Lock to prevent changes."}
 				</p>
 			</div>
+
 			<div className="flex flex-col sm:flex-row gap-4">
 				<div className="flex-1">
 					<Label htmlFor="inputText" className="mb-2 block text-lg font-medium">
@@ -92,6 +119,7 @@ export const TextAndKeyInput = ({
 						}
 						className="min-h-[200px] resize-none text-lg"
 						value={inputText}
+						onPaste={handlePaste}
 						onChange={(e) => setInputText(e.target.value)}
 					/>
 				</div>

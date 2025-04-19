@@ -1,7 +1,9 @@
+// index.helpers.ts
 import { toast } from "sonner";
-import { emojiList } from "./index.constants";
+import CryptoJS from "crypto-js";
+import { base64ToEmojiMap, emojiToBase64Map } from "./index.constants";
 
-//types
+// Types
 type CopyTextOptions = {
 	text: string;
 	successMessage?: string;
@@ -31,25 +33,21 @@ type GenerateShareableUrlOptions = {
 	currentUrl: string;
 };
 
-export function convertToEmojis(text: string): string {
-	const emojis = emojiList;
-	let result = "";
-	for (let i = 0; i < text.length; i++) {
-		const charCode = text.charCodeAt(i);
-		const emojiIndex = charCode % emojis.length;
-		result += emojis[emojiIndex];
-	}
-	return result;
-}
+// ✅ Reversible Encoding
+export const convertToEmojis = (base64: string): string => {
+	return [...base64].map((char) => base64ToEmojiMap[char] || char).join("");
+};
 
-export function convertFromEmojis(emojiText: string): string {
-	if (emojiText.match(/^[A-Za-z0-9+/=]+$/)) return emojiText;
-	return emojiText; // Placeholder for actual reverse mapping logic
-}
+export const convertFromEmojis = (emojiStr: string): string => {
+	return [...emojiStr]
+		.map((emoji) => emojiToBase64Map[emoji] || emoji)
+		.join("");
+};
 
+// ✅ Key Generator
 export function generateRandomKeyString(length = 12): string {
 	const chars =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	let result = "";
 	for (let i = 0; i < length; i++) {
 		result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -57,6 +55,7 @@ export function generateRandomKeyString(length = 12): string {
 	return result;
 }
 
+// ✅ Copy Handler
 export const copyOutputText = ({
 	text,
 	successMessage = "Copied",
@@ -71,11 +70,10 @@ export const copyOutputText = ({
 	}
 
 	copyToClipboard(text);
-	toast.success(successMessage, {
-		description,
-	});
+	toast.success(successMessage, { description });
 };
 
+// ✅ Key Generator Handler
 export const generateRandomKey = ({
 	keyLocked,
 	setKey,
@@ -94,6 +92,7 @@ export const generateRandomKey = ({
 	});
 };
 
+// ✅ Clear Handler
 export const clearAll = ({
 	keyLocked,
 	setInputText,
@@ -114,6 +113,7 @@ export const clearAll = ({
 	}
 };
 
+// ✅ URL Generator
 export const generateShareableUrl = ({
 	inputText,
 	key,
@@ -131,11 +131,31 @@ export const generateShareableUrl = ({
 	}
 
 	const encrypted = CryptoJS.AES.encrypt(inputText, key).toString();
-	setEncryptedText(encrypted);
+	const emojiEncrypted = convertToEmojis(encrypted);
+	const fullUrl = `${currentUrl}?text=${encodeURIComponent(emojiEncrypted)}&key=${encodeURIComponent(key)}&mode=decrypt`;
+
+	setEncryptedText(emojiEncrypted);
 	setUrlKey(key);
 	setMode("decrypt");
+
 	toast.success("Shareable URL has been created.", {
-		description: "Shareable URL has been created.",
+		description: "Copied encrypted URL to clipboard.",
 	});
-	copyToClipboard(encrypted);
+	copyToClipboard(fullUrl);
 };
+
+// ✅ Decryption Utility
+export function decryptEmojiText(
+	emojiEncrypted: string,
+	key: string,
+): string | null {
+	try {
+		const base64Text = convertFromEmojis(emojiEncrypted);
+		const bytes = CryptoJS.AES.decrypt(base64Text, key);
+		const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+		return decrypted || null;
+	} catch (e) {
+		console.error("Failed to decrypt:", e);
+		return null;
+	}
+}

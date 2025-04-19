@@ -46,13 +46,19 @@ export default function EncryptionTool() {
 	const [keyLocked, setKeyLocked] = useState(false);
 	const currentUrl = useCurrentUrl();
 
+	// Check if user is allowed to interact
+	const isKeyReady = keyLocked && key.trim().length > 0;
+
 	useEffect(() => {
 		if (encryptedText && urlKey) {
 			setMode("decrypt");
 			setInputText(encryptedText);
 			setKey(urlKey);
+			setKeyLocked(true); // ✅ Auto lock the key when pre-filled via URL
+
 			try {
-				const decrypted = CryptoJS.AES.decrypt(encryptedText, urlKey).toString(
+				const base64 = convertFromEmojis(encryptedText);
+				const decrypted = CryptoJS.AES.decrypt(base64, urlKey).toString(
 					CryptoJS.enc.Utf8,
 				);
 				setOutputText(decrypted);
@@ -65,10 +71,11 @@ export default function EncryptionTool() {
 	}, [encryptedText, urlKey, setMode]);
 
 	useEffect(() => {
-		if (!inputText || !key) {
+		if (!inputText || !keyLocked || !key) {
 			setOutputText("");
 			return;
 		}
+
 		try {
 			if (mode === "encrypt") {
 				const encrypted = CryptoJS.AES.encrypt(inputText, key).toString();
@@ -79,12 +86,41 @@ export default function EncryptionTool() {
 				const decrypted = CryptoJS.AES.decrypt(normalText, key).toString(
 					CryptoJS.enc.Utf8,
 				);
-				setOutputText(decrypted || inputText);
+				setOutputText(decrypted || "");
 			}
 		} catch {
 			setOutputText("");
 		}
-	}, [inputText, key, mode]);
+	}, [inputText, key, keyLocked, mode]);
+
+	const handleInputChange = (val: string) => {
+		if (!isKeyReady) {
+			toast.warning("Key Not Locked", {
+				description: "Please enter and lock your secret key first.",
+			});
+			return;
+		}
+		setInputText(val);
+	};
+
+	const handleGenerateLink = () => {
+		if (!isKeyReady) {
+			toast.warning("Key Not Locked", {
+				description: "Lock your key before generating a shareable link.",
+			});
+			return;
+		}
+
+		generateShareableUrl({
+			inputText,
+			key,
+			setEncryptedText,
+			setUrlKey,
+			setMode,
+			copyToClipboard: setTextToCopy,
+			currentUrl: currentUrl || "",
+		});
+	};
 
 	return (
 		<main className="flex flex-col items-center justify-between p-4 mt-4 bg-background">
@@ -100,12 +136,7 @@ export default function EncryptionTool() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<Tabs
-						defaultValue={mode}
-						value={mode}
-						onValueChange={(value) => setMode(value as Mode)}
-						className="w-full"
-					>
+					<Tabs defaultValue={mode} onValueChange={setMode} className="w-full">
 						<TabsList className="grid w-full grid-cols-2 mb-6 h-11">
 							<TabsTrigger value="encrypt" className="text-base font-medium">
 								<Lock className="h-4 w-4 mr-2" />
@@ -119,7 +150,7 @@ export default function EncryptionTool() {
 						<TextAndKeyInput
 							mode={mode}
 							inputText={inputText}
-							setInputText={setInputText}
+							setInputText={handleInputChange}
 							outputText={outputText}
 							keyValue={key}
 							setKeyValue={setKey}
@@ -139,19 +170,7 @@ export default function EncryptionTool() {
 						Clear All 🧹
 					</Button>
 					{mode === "encrypt" && currentUrl && (
-						<Button
-							onClick={() =>
-								generateShareableUrl({
-									inputText,
-									key,
-									setEncryptedText,
-									setUrlKey,
-									setMode,
-									copyToClipboard: setTextToCopy,
-									currentUrl,
-								})
-							}
-						>
+						<Button onClick={handleGenerateLink}>
 							<Sparkles className="h-4 w-4 mr-2" />
 							Generate Shareable Link 🔗
 						</Button>
